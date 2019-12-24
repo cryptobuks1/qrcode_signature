@@ -32,8 +32,9 @@ def qrcode_generate(private_key = const_private_key):
         border=2
     )
 
-    print(message + signature.hex())
-    qr.add_data(message + signature.hex())
+    qrcode_message = message + "$" + signature.hex() + "$"
+    print(qrcode_message)
+    qr.add_data(qrcode_message)
 
     qr.make(fit=True)
     img = qr.make_image()
@@ -44,8 +45,18 @@ def qrcode_varify(public_key = const_public_key):
     print(public_key)
     print("opening camera...")
     context = detect()
-    sig_now = context[-128:]
-    message = context[:-128]
+
+    if len(context) <= 130:
+        print("normal urcode:\n" + context)
+        return
+    if context[-1] == "$" and context[-130] == "$":
+        print("normal urcode:\n" + context)
+        return
+
+    sig_now = context[-129:-1]
+    message = context[:-130]
+
+    print(sig_now + '\n' + message)
 
     result = rsa_verify(bytes.fromhex(sig_now), message.encode('utf-8'), public_key)
 
